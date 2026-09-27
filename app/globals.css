@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@layer utilities {
+  @keyframes breathing {
+    0%, 100% {
+      opacity: 0.08;
+      transform: scaleY(0.85);
+    }
+    50% {
+      opacity: 0.28;
+      transform: scaleY(1.08);
+    }
+  }
+
+  @keyframes dashForward {
+    to {
+      stroke-dashoffset: -28;
+    }
+  }
+
+  @keyframes scanline {
+    0% {
+      top: 0%;
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      top: 100%;
+      opacity: 0;
+    }
+  }
+
+  .animate-breathing {
+    animation: breathing 6s ease-in-out infinite;
+  }
+
+  .animate-dash-forward {
+    animation: dashForward 1.2s linear infinite;
+  }
+
+  .animate-spin-slow {
+    animation: spin 16s linear infinite;
+  }
+}
