@@ -50,7 +50,7 @@ export const TurnByTurnBanner: React.FC<TurnByTurnBannerProps> = ({
   return (
     <div
       id="hud-turn-by-turn-banner"
-      className="absolute top-20 left-8 z-30 flex flex-col pointer-events-auto select-none max-w-sm w-full"
+      className="absolute top-20 left-8 z-30 flex flex-col pointer-events-auto select-none max-w-sm w-full scale-90 origin-top-left"
     >
       {/* Apple-like Glass Route Guidance Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-slate-950/60 backdrop-blur-xl border border-white/15 shadow-[0_12px_40px_rgba(0,0,0,0.6)]">

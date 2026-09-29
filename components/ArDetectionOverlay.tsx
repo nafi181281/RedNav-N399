@@ -4,11 +4,9 @@ import {
   FlaskConical,
   Bot,
   Droplets,
-  Navigation,
-  ChevronRight,
-  Crosshair,
-  Info,
   Users,
+  ChevronRight,
+  Info,
 } from 'lucide-react';
 import { DetectedObject } from '../types';
 import { hudSound } from '../utils/soundEffects';
@@ -20,6 +18,7 @@ interface ArDetectionOverlayProps {
   selectedObjectId: string | null;
   onSelectObject: (obj: DetectedObject) => void;
   onSetNavigationTarget: (obj: DetectedObject) => void;
+  onOpenInformation?: (obj: DetectedObject) => void;
 }
 
 export const ArDetectionOverlay: React.FC<ArDetectionOverlayProps> = ({
@@ -29,6 +28,7 @@ export const ArDetectionOverlay: React.FC<ArDetectionOverlayProps> = ({
   selectedObjectId,
   onSelectObject,
   onSetNavigationTarget,
+  onOpenInformation,
 }) => {
   // Normalize heading 0-360
   const normHeading = ((headingDeg % 360) + 360) % 360;
@@ -50,36 +50,47 @@ export const ArDetectionOverlay: React.FC<ArDetectionOverlayProps> = ({
         const elevDiff = obj.elevationDeg - pitchDeg;
         const screenY = 50 - (elevDiff / 25) * 35; // mapping elevation
 
-        // Is centered in reticle (within 8 degrees)?
-        const isTargetLocked = Math.abs(azimuthDiff) < 7 && Math.abs(elevDiff) < 6;
+        // Is centered in reticle (within 7 degrees)?
+        const isTargetLocked = Math.abs(azimuthDiff) < 6 && Math.abs(elevDiff) < 5;
         const isSelected = selectedObjectId === obj.id || isTargetLocked;
 
         const isHazard = obj.category === 'HAZARD';
         const isRover = obj.category === 'ROVER';
         const isWater = obj.category === 'RESOURCE';
-        const isScience = obj.category === 'SCIENCE';
-        const isCrew = (obj.category as string) === 'CREW';
+        const isCrew = obj.category === 'CREW';
 
-        // Styling based on category
-        const borderGlow = isHazard
-          ? 'border-amber-400/80 shadow-[0_0_20px_rgba(245,158,11,0.5)]'
+        // Subtle theme colors
+        const accentColor = isHazard
+          ? 'text-amber-400 border-amber-400/40'
           : isCrew
-          ? 'border-emerald-400/90 shadow-[0_0_20px_rgba(52,211,153,0.6)]'
+          ? 'text-emerald-400 border-emerald-400/40'
           : isWater
-          ? 'border-cyan-300/80 shadow-[0_0_20px_rgba(103,232,249,0.5)]'
+          ? 'text-cyan-300 border-cyan-400/40'
           : isRover
-          ? 'border-sky-400/80 shadow-[0_0_20px_rgba(56,189,248,0.4)]'
-          : 'border-cyan-400/70 shadow-[0_0_20px_rgba(34,211,238,0.4)]';
+          ? 'text-sky-400 border-sky-400/40'
+          : 'text-cyan-400 border-cyan-400/40';
 
-        const badgeBg = isHazard
-          ? 'bg-amber-500/20 text-amber-300 border-amber-400/40'
+        const dotBg = isHazard
+          ? 'bg-amber-400'
           : isCrew
-          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40'
+          ? 'bg-emerald-400'
           : isWater
-          ? 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40'
+          ? 'bg-cyan-300'
           : isRover
-          ? 'bg-sky-500/20 text-sky-300 border-sky-400/40'
-          : 'bg-cyan-500/20 text-cyan-300 border-cyan-400/40';
+          ? 'bg-sky-400'
+          : 'bg-cyan-400';
+
+        const iconNode = isHazard ? (
+          <AlertTriangle className="w-3 h-3 text-amber-400" />
+        ) : isCrew ? (
+          <Users className="w-3 h-3 text-emerald-400" />
+        ) : isRover ? (
+          <Bot className="w-3 h-3 text-sky-400" />
+        ) : isWater ? (
+          <Droplets className="w-3 h-3 text-cyan-300" />
+        ) : (
+          <FlaskConical className="w-3 h-3 text-cyan-400" />
+        );
 
         return (
           <div
@@ -95,159 +106,96 @@ export const ArDetectionOverlay: React.FC<ArDetectionOverlayProps> = ({
             onClick={() => {
               hudSound.playTargetLock();
               onSelectObject(obj);
+              if (onOpenInformation) {
+                onOpenInformation(obj);
+              }
             }}
           >
-            {/* Reticle Target Marker on Terrain */}
+            {/* Minimalist, Low-Visibility Reticle Marker on Terrain */}
             <div className="relative flex flex-col items-center">
-              {/* Pulsing Brackets / Crosshair */}
-              <div className="relative w-8 h-8 flex items-center justify-center">
-                {/* 4 corner brackets */}
-                <div
-                  className={`absolute -top-1 -left-1 w-2.5 h-2.5 border-t-2 border-l-2 ${
-                    isHazard ? 'border-amber-400' : 'border-cyan-400'
-                  }`}
-                />
-                <div
-                  className={`absolute -top-1 -right-1 w-2.5 h-2.5 border-t-2 border-r-2 ${
-                    isHazard ? 'border-amber-400' : 'border-cyan-400'
-                  }`}
-                />
-                <div
-                  className={`absolute -bottom-1 -left-1 w-2.5 h-2.5 border-b-2 border-l-2 ${
-                    isHazard ? 'border-amber-400' : 'border-cyan-400'
-                  }`}
-                />
-                <div
-                  className={`absolute -bottom-1 -right-1 w-2.5 h-2.5 border-b-2 border-r-2 ${
-                    isHazard ? 'border-amber-400' : 'border-cyan-400'
-                  }`}
-                />
-
-                {/* Center dot */}
-                <div
-                  className={`w-1.5 h-1.5 rounded-full ${
-                    isHazard ? 'bg-amber-400' : isCrew ? 'bg-emerald-400' : 'bg-cyan-400'
-                  } ${isSelected ? 'animate-ping' : ''}`}
-                />
-
-                {isSelected && (
-                  <Crosshair className="w-5 h-5 text-cyan-300 animate-spin-slow opacity-80" />
-                )}
-              </div>
-
-              {/* Target Identification Pill Card */}
+              {/* Corner Brackets Reticle: subtle, translucent (low visibility as requested) */}
               <div
-                className={`mt-2 flex flex-col items-center transition-all duration-200 ${
-                  isSelected ? 'scale-105' : 'scale-95 opacity-90 group-hover:opacity-100'
+                className={`relative w-6 h-6 flex items-center justify-center transition-all duration-200 ${
+                  isSelected
+                    ? 'scale-110 opacity-90'
+                    : 'scale-90 opacity-30 group-hover:opacity-85'
                 }`}
               >
-                {/* Floating Glass Identification Pod */}
+                {/* 4 delicate corner ticks */}
                 <div
-                  className={`flex flex-col p-2.5 rounded-xl bg-slate-950/75 backdrop-blur-md border ${borderGlow} min-w-[190px]`}
-                >
-                  {/* Category Header with user requested formatting */}
-                  <div className="flex items-center justify-between pb-1 mb-1 border-b border-white/10">
-                    <div className="flex items-center space-x-1.5">
-                      {isHazard ? (
-                        <div className="flex items-center space-x-1 text-amber-400 font-mono text-[10px] font-bold tracking-wider">
-                          <AlertTriangle className="w-3.5 h-3.5 animate-bounce" />
-                          <span>TERRAIN HAZARD</span>
-                        </div>
-                      ) : isCrew ? (
-                        <div className="flex items-center space-x-1 text-emerald-300 font-mono text-[10px] font-bold tracking-wider">
-                          <Users className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                          <span>EXPEDITION CREW</span>
-                        </div>
-                      ) : isRover ? (
-                        <div className="flex items-center space-x-1 text-sky-300 font-mono text-[10px] font-bold tracking-wider">
-                          <Bot className="w-3.5 h-3.5" />
-                          <span>NEARBY ROVER</span>
-                        </div>
-                      ) : isWater ? (
-                        <div className="flex items-center space-x-1 text-cyan-300 font-mono text-[10px] font-bold tracking-wider">
-                          <Droplets className="w-3.5 h-3.5" />
-                          <span>WATER / ICE</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center space-x-1 text-cyan-300 font-mono text-[10px] font-bold tracking-wider">
-                          <FlaskConical className="w-3.5 h-3.5" />
-                          <span>SCIENCE TARGET</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <span className="font-mono text-xs font-bold text-white tracking-tight">
-                      {Math.round(obj.distanceMeters)} m
-                    </span>
-                  </div>
-
-                  {/* Object Title & Subtitle */}
-                  <div className="text-left">
-                    <div className="text-xs font-bold text-white tracking-tight">
-                      {obj.title}
-                    </div>
-                    <div className="text-[10px] font-medium text-slate-300/80 leading-tight">
-                      {obj.subtitle}
-                    </div>
-                  </div>
-
-                  {/* Expanded Telemetry when clicked/locked */}
-                  {isSelected && (
-                    <div className="mt-2 pt-2 border-t border-white/10 space-y-1.5 text-[10px] font-mono animate-fadeIn">
-                      {/* NASA Mission Photo Preview */}
-                      {obj.image && (
-                        <div className="relative rounded-lg overflow-hidden border border-cyan-400/40 shadow-inner my-1.5">
-                          <img
-                            src={obj.image}
-                            alt={obj.title}
-                            className="w-full h-24 object-cover filter contrast-105"
-                          />
-                          <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent p-1.5">
-                            <span className="text-[9px] text-cyan-300 font-bold block truncate">
-                              {obj.nasaMission || 'NASA MASTCAM OPTICAL ARCHIVE'}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {obj.nasaMission && !obj.image && (
-                        <div className="text-[9px] text-cyan-300/90 font-bold px-1 py-0.5 rounded bg-cyan-950/50 border border-cyan-500/20">
-                          {obj.nasaMission}
-                        </div>
-                      )}
-
-                      {obj.details.map((d, i) => (
-                        <div key={i} className="flex justify-between items-center text-slate-300">
-                          <span className="text-white/50">{d.label}:</span>
-                          <span className="font-semibold text-cyan-100 truncate ml-1">
-                            {d.value}
-                          </span>
-                        </div>
-                      ))}
-
-                      {/* Action Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          hudSound.playClick();
-                          onSetNavigationTarget(obj);
-                        }}
-                        className="w-full mt-2 py-1 px-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-400/40 text-cyan-200 text-[10px] font-semibold flex items-center justify-center space-x-1 transition-colors"
-                      >
-                        <Navigation className="w-3 h-3 text-cyan-300" />
-                        <span>Navigate to Target</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                {/* Vertical Stem Line anchoring tag to target position */}
+                  className={`absolute -top-0.5 -left-0.5 w-1.5 h-1.5 border-t border-l ${
+                    isHazard ? 'border-amber-400' : isCrew ? 'border-emerald-400' : 'border-cyan-400'
+                  }`}
+                />
                 <div
-                  className={`w-0.5 h-3 ${
-                    isHazard ? 'bg-amber-400/60' : 'bg-cyan-400/60'
+                  className={`absolute -top-0.5 -right-0.5 w-1.5 h-1.5 border-t border-r ${
+                    isHazard ? 'border-amber-400' : isCrew ? 'border-emerald-400' : 'border-cyan-400'
+                  }`}
+                />
+                <div
+                  className={`absolute -bottom-0.5 -left-0.5 w-1.5 h-1.5 border-b border-l ${
+                    isHazard ? 'border-amber-400' : isCrew ? 'border-emerald-400' : 'border-cyan-400'
+                  }`}
+                />
+                <div
+                  className={`absolute -bottom-0.5 -right-0.5 w-1.5 h-1.5 border-b border-r ${
+                    isHazard ? 'border-amber-400' : isCrew ? 'border-emerald-400' : 'border-cyan-400'
+                  }`}
+                />
+
+                {/* Center subtle dot */}
+                <div
+                  className={`w-1 h-1 rounded-full ${dotBg} ${
+                    isSelected ? 'w-1.5 h-1.5 animate-ping' : 'opacity-60'
                   }`}
                 />
               </div>
+
+              {/* Sleek, Low-Visibility Translucent Pill Tag */}
+              {/* Clean & compact: Doesn't obstruct Mars landscape! Rich specs are in side panel */}
+              <div
+                className={`mt-1 flex items-center space-x-1.5 px-2 py-0.5 rounded-full border transition-all duration-200 ${
+                  isSelected
+                    ? 'bg-slate-950/65 backdrop-blur-md border-cyan-400/50 shadow-[0_0_12px_rgba(6,182,212,0.25)] opacity-95 scale-105'
+                    : 'bg-slate-950/30 backdrop-blur-xs border-white/10 text-white/70 opacity-35 group-hover:opacity-90 group-hover:bg-slate-950/50 scale-95'
+                }`}
+              >
+                {/* Minimal Icon */}
+                <span className="shrink-0">{iconNode}</span>
+
+                {/* Concise Object Title */}
+                <span className="text-[10px] font-mono font-bold tracking-tight text-white whitespace-nowrap">
+                  {obj.title}
+                </span>
+
+                {/* Distance in meters */}
+                <span className="text-[9px] font-mono font-semibold text-cyan-300/90 whitespace-nowrap">
+                  {Math.round(obj.distanceMeters)}m
+                </span>
+
+                {/* Subtle side info hint indicator */}
+                <span className="text-[8px] font-mono text-cyan-400/80 bg-cyan-950/50 px-1 py-0.2 rounded border border-cyan-500/20 group-hover:inline-block hidden">
+                  INFO ↗
+                </span>
+              </div>
+
+              {/* Red small downward triangle arrow for astronaut crew pointing to helmet */}
+              {isCrew && (
+                <div className="flex flex-col items-center mt-0.5">
+                  <div className="w-0 h-0 border-l-[4.5px] border-l-transparent border-r-[4.5px] border-r-transparent border-t-[7px] border-t-red-500 filter drop-shadow-[0_0_4px_rgba(239,68,68,0.95)]" />
+                </div>
+              )}
+
+              {/* Delicate thin anchor stem */}
+              <div
+                className={`w-px h-2 transition-opacity ${
+                  isCrew
+                    ? 'bg-red-500/70 opacity-90'
+                    : isSelected
+                    ? 'bg-cyan-400/50 opacity-80'
+                    : 'bg-white/15 opacity-25'
+                }`}
+              />
             </div>
           </div>
         );

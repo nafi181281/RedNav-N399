@@ -6,7 +6,7 @@ export type GoogleEarthViewMode = 'eva' | 'astronaut' | 'drone' | 'satellite' | 
 
 export type TimeOfSol = 'morning' | 'noon' | 'golden' | 'blue-sunset' | 'night';
 
-export type ObjectCategory = 'SCIENCE' | 'HAZARD' | 'ROVER' | 'RESOURCE' | 'BASE';
+export type ObjectCategory ='CREW'|'SCIENCE' | 'HAZARD' | 'ROVER' | 'RESOURCE' | 'BASE';
 
 export interface DetectedObject {
   id: string;

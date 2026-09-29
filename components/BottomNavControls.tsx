@@ -9,6 +9,7 @@ import {
   RotateCcw,
   Download,
   Globe,
+  Info,
 } from 'lucide-react';
 import { HudMode, GoogleEarthViewMode } from '../types';
 import { hudSound } from '../utils/soundEffects';
@@ -23,6 +24,9 @@ interface BottomNavControlsProps {
   onTogglePace?: () => void;
   viewMode?: GoogleEarthViewMode;
   onToggle3dView?: () => void;
+  isInformationOpen?: boolean;
+  onToggleInformation?: () => void;
+  informationCount?: number;
 }
 
 export const BottomNavControls: React.FC<BottomNavControlsProps> = ({
@@ -35,6 +39,9 @@ export const BottomNavControls: React.FC<BottomNavControlsProps> = ({
   onTogglePace,
   viewMode = 'eva',
   onToggle3dView,
+  isInformationOpen = false,
+  onToggleInformation,
+  informationCount = 0,
 }) => {
   const navItems: { mode: HudMode; label: string; icon: React.ReactNode }[] = [
     { mode: 'MAP', label: 'MAP', icon: <Map className="w-4 h-4" /> },
@@ -118,6 +125,37 @@ export const BottomNavControls: React.FC<BottomNavControlsProps> = ({
               </button>
             );
           })}
+
+          {/* Dedicated INFORMATION Button */}
+          {onToggleInformation && (
+            <button
+              id="nav-btn-information"
+              onClick={() => {
+                hudSound.playClick();
+                onToggleInformation();
+              }}
+              className={`relative flex items-center space-x-1.5 px-3.5 py-2 rounded-full font-mono text-xs font-semibold tracking-wider transition-all duration-200 border ${
+                isInformationOpen
+                  ? 'bg-cyan-500/30 text-white shadow-[0_0_20px_rgba(6,182,212,0.45)] border-cyan-400/60'
+                  : 'text-slate-300 hover:text-white hover:bg-white/10 border-transparent'
+              }`}
+              title="Open Expedition Information Dossier"
+            >
+              <Info className={`w-4 h-4 ${isInformationOpen ? 'text-cyan-300' : 'text-slate-400'}`} />
+              <span>INFORMATION</span>
+              {informationCount > 0 && (
+                <span
+                  className={`ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold ${
+                    isInformationOpen
+                      ? 'bg-cyan-400 text-slate-950'
+                      : 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/30'
+                  }`}
+                >
+                  {informationCount}
+                </span>
+              )}
+            </button>
+          )}
         </nav>
 
         {/* Walk / EVA Sim Toggle & Pace Selector */}

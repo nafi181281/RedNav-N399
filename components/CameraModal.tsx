@@ -30,14 +30,14 @@ export const CameraModal: React.FC<CameraModalProps> = ({
       timestamp: 'SOL 142 14:18',
       zoom: '1x',
       heading: 240,
-      url: '/src/assets/images/mars_surface_eva_1789933632776.jpg',
+      url: '/images/mars_surface_eva_1789933632776.jpg',
     },
     {
       id: 'photo-2',
       timestamp: 'SOL 142 14:26',
       zoom: '3x',
       heading: 268,
-      url: '/src/assets/images/mars_jezero_crater_1789933658468.jpg',
+      url: '/images/mars_jezero_crater_1789933658468.jpg',
     },
   ]);
 
@@ -53,7 +53,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
       timestamp: `SOL 142 14:32`,
       zoom: zoomLevel,
       heading: Math.round(headingDeg),
-      url: '/src/assets/images/mars_surface_eva_1789933632776.jpg',
+      url: '/images/mars_surface_eva_1789933632776.jpg',
     };
     setPhotos([newPhoto, ...photos]);
   };
@@ -125,7 +125,7 @@ export const CameraModal: React.FC<CameraModalProps> = ({
             }}
           >
             <img
-              src="/src/assets/images/mars_surface_eva_1789933632776.jpg"
+              src="/images/mars_surface_eva_1789933632776.jpg"
               alt="Martian Viewfinder Preview"
               referrerPolicy="no-referrer"
               className="w-full h-full object-cover"

@@ -163,9 +163,6 @@ export const Mars3dSurface: React.FC<Mars3dSurfaceProps> = ({
     const textureLoader = new THREE.TextureLoader();
 
     // 3.1 360 Mountain Ridge & Wide Gravel Desert Horizon
-    // NOTE: Next.js serves files placed in /public directly from the root URL,
-    // so a file at public/images/xxx.jpg is requested as "/images/xxx.jpg"
-    // (NOT "/public/images/xxx.jpg" and NOT "/src/assets/images/xxx.jpg").
     const horizonTexture = textureLoader.load(
       '/images/mars_wide_gravel_horizon_1790425175244.jpg'
     );
@@ -239,21 +236,6 @@ export const Mars3dSurface: React.FC<Mars3dSurfaceProps> = ({
     const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
     terrainMesh.receiveShadow = true;
     scene.add(terrainMesh);
-
-    // 3.3b Safety Floor — an "infinite" ground fallback that always re-centers
-    // under the camera, so looking down or walking far never reveals a black void
-    // beyond the edge of the detailed terrain mesh above.
-    const safetyFloorGeo = new THREE.PlaneGeometry(6000, 6000);
-    safetyFloorGeo.rotateX(-Math.PI / 2);
-    const safetyFloorMat = new THREE.MeshStandardMaterial({
-      map: gravelSoilTexture,
-      roughness: 0.94,
-      metalness: 0.02,
-      color: 0xffffff,
-    });
-    const safetyFloorMesh = new THREE.Mesh(safetyFloorGeo, safetyFloorMat);
-    safetyFloorMesh.position.y = -0.25; // sits just below the detailed terrain to avoid z-fighting
-    scene.add(safetyFloorMesh);
 
     // 3.4 Topographic DEM Contour Grid
     const topoGeo = terrainGeo.clone();
@@ -432,13 +414,8 @@ export const Mars3dSurface: React.FC<Mars3dSurfaceProps> = ({
     scene.add(baseGroup);
 
     // 6. HIGH-FIDELITY NASA EMU SUIT TEXTURES, GEOMETRIES & MATERIALS (MATCHING USER REFERENCE PHOTO)
-    // NOTE: "real_astronaut_suit_fabric_1790437395793.jpg" was not present in the
-    // public/images folder that was shared. If you generate/export that file from
-    // AI Studio, drop it into public/images and this path will pick it up as-is.
-    // Until then this points at an existing suit texture so the astronauts are not
-    // left textureless/black.
     const suitClothTexture = textureLoader.load(
-      '/images/mars_astronaut_suit_walking_1790425215547.jpg'
+      '/images/real_astronaut_suit_fabric_1790437395793.jpg'
     );
     suitClothTexture.wrapS = THREE.RepeatWrapping;
     suitClothTexture.wrapT = THREE.RepeatWrapping;
@@ -548,6 +525,84 @@ export const Mars3dSurface: React.FC<Mars3dSurfaceProps> = ({
     const bootUpperGeo = new THREE.BoxGeometry(0.22, 0.2, 0.36);
     const bootSoleGeo = new THREE.BoxGeometry(0.24, 0.08, 0.42);
 
+    const nameplateTextures: THREE.Texture[] = [];
+
+    // Helper: Create a 3D Head Nameplate Sprite with the astronaut's name and red triangle arrow pointing down to the helmet
+    const createAstronautNameplateSprite = (name: string) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 640;
+      canvas.height = 150;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        const boxX = 24;
+        const boxY = 12;
+        const boxWidth = 592;
+        const boxHeight = 78;
+        const radius = 16;
+
+        // Dark slate-glass background with red accent glow
+        ctx.shadowColor = 'rgba(239, 68, 68, 0.55)';
+        ctx.shadowBlur = 12;
+        ctx.fillStyle = 'rgba(6, 12, 24, 0.88)';
+        ctx.beginPath();
+        ctx.roundRect(boxX, boxY, boxWidth, boxHeight, radius);
+        ctx.fill();
+
+        // Red outer border
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.9)';
+        ctx.lineWidth = 3.5;
+        ctx.stroke();
+
+        // Pulsing red indicator beacon dot on left
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(boxX + 32, boxY + boxHeight / 2, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Astronaut Name Text (bold, crisp, highly visible)
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(name.toUpperCase(), boxX + boxWidth / 2 + 10, boxY + boxHeight / 2);
+
+        // Small Red Triangle Arrow pointing DOWN to the helmet
+        // ("mathar opor red akta soto trangle ar moto arrow diye name gula likhe daw")
+        const arrowCenterX = canvas.width / 2;
+        const arrowTopY = boxY + boxHeight + 2;
+        const arrowWidth = 32;
+        const arrowHeight = 22;
+
+        ctx.fillStyle = '#ef4444'; // Bright Red
+        ctx.beginPath();
+        ctx.moveTo(arrowCenterX - arrowWidth / 2, arrowTopY);
+        ctx.lineTo(arrowCenterX + arrowWidth / 2, arrowTopY);
+        ctx.lineTo(arrowCenterX, arrowTopY + arrowHeight);
+        ctx.closePath();
+        ctx.fill();
+
+        // White border on red triangle
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.minFilter = THREE.LinearFilter;
+      const spriteMat = new THREE.SpriteMaterial({
+        map: texture,
+        transparent: true,
+        depthTest: false,
+      });
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.scale.set(2.8, 0.65, 1);
+      sprite.position.set(0, 2.58, 0); // Directly above helmet
+      return { sprite, texture };
+    };
+
     // 6.1 Function to build a photorealistic NASA Apollo/Artemis EMU astronaut rig
     const buildAstronautRig = (
       id: string,
@@ -565,6 +620,11 @@ export const Mars3dSurface: React.FC<Mars3dSurfaceProps> = ({
         color: accentColor,
         roughness: 0.5,
       });
+
+      // Floating Head Nameplate Sprite with Red Downward Triangle Arrow
+      const { sprite: nameplateSprite, texture: nameplateTex } = createAstronautNameplateSprite(name);
+      group.add(nameplateSprite);
+      nameplateTextures.push(nameplateTex);
 
       // 1. Pressurized Body (Upper Chest + Abdomen)
       const chestMesh = new THREE.Mesh(torsoChestGeo, suitClothMat);
@@ -800,11 +860,11 @@ export const Mars3dSurface: React.FC<Mars3dSurfaceProps> = ({
       };
     };
 
-    // 6.2 Primary Player Astronaut Rig (At current walk position)
+    // 6.2 Primary Player Astronaut Rig (Dr. NAFI UL SHEAK)
     const playerRig = buildAstronautRig(
       'player',
-      'EVA Explorer',
-      'Payload Specialist',
+      'Dr. NAFI UL SHEAK',
+      'EVA Expedition Lead',
       0xea580c, // NASA Mars exploration orange
       0.0,
       0.0,
@@ -813,38 +873,38 @@ export const Mars3dSurface: React.FC<Mars3dSurfaceProps> = ({
     );
 
     // 6.3 3 ASTRONAUT CREWMATES POSITIONED ON THE SIDES (FLANKS)
-    // Center line-of-sight is 100% OPEN & CLEAR ("side a daw, samne dhekte pachi na")
+    // Center line-of-sight is 100% OPEN & CLEAR
     const squadMembers: SquadAstronautRig[] = [
-      // 1. Specialist Maya Patel: 5.6m to the RIGHT FLANK, 10.2m ahead
+      // 1. Dr. ATHER ISRAK CHOWDHURY: 5.4m to the LEFT FLANK, 8.5m ahead (Expedition Lead)
+      buildAstronautRig(
+        'crew-vance',
+        'Dr. ATHER ISRAK CHOWDHURY',
+        'Lead Navigator & Expedition Specialist',
+        0x2563eb, // Royal Blue commander stripes
+        -5.4,     // Wide on the LEFT flank
+        8.5,      // 8.5 meters ahead
+        0.2,
+        0x38bdf8
+      ),
+      // 2. Dr. POLLOB KUMAR: 5.6m to the RIGHT FLANK, 10.2m ahead (Life Support)
       buildAstronautRig(
         'crew-patel',
-        'Spec. Maya Patel',
-        'Life Support & Comms',
+        'Dr. POLLOB KUMAR',
+        'Life Support & EVA Systems',
         0x06b6d4, // Cyan stripes
-        5.6,      // Wide on the RIGHT flank! (Leaves forward view clear)
+        5.6,      // Wide on the RIGHT flank
         10.2,     // 10.2 meters ahead
         0.7,
         0x06b6d4,
         true      // Comms antenna
       ),
-      // 2. Commander Sarah Vance: 5.4m to the LEFT FLANK, 8.5m ahead (Expedition Lead)
-      buildAstronautRig(
-        'crew-vance',
-        'CDR Sarah Vance',
-        'Expedition Commander',
-        0x2563eb, // Royal Blue commander stripes
-        -5.4,     // Wide on the LEFT flank! (Leaves forward view clear)
-        8.5,      // 8.5 meters ahead
-        0.2,
-        0x38bdf8
-      ),
-      // 3. Dr. Alexei Chen: 8.2m to the FAR LEFT FLANK, 19.5m ahead (Field Geologist scouting ahead)
+      // 3. Dr. JAMIUL ISLAM SUNNY: 8.2m to the FAR LEFT FLANK, 19.5m ahead (Field Geologist)
       buildAstronautRig(
         'crew-chen',
-        'Dr. Alexei Chen',
-        'Field Geologist',
+        'Dr. JAMIUL ISLAM SUNNY',
+        'Astrobiology & Mineralogy Specialist',
         0xd97706, // Amber field geologist stripes
-        -8.2,     // Ahead on the FAR LEFT ridge! (Leaves forward view clear)
+        -8.2,     // Ahead on the FAR LEFT ridge
         19.5,     // 19.5 meters ahead
         1.1,
         0xf59e0b
@@ -1103,10 +1163,6 @@ export const Mars3dSurface: React.FC<Mars3dSurfaceProps> = ({
       // Keep Sky Dome centered around camera
       skyDomeMesh.position.set(camera.position.x, camera.position.y - 16, camera.position.z);
 
-      // Keep the safety floor re-centered under the camera so it never "runs out"
-      safetyFloorMesh.position.x = camera.position.x;
-      safetyFloorMesh.position.z = camera.position.z;
-
       // Report altitude to parent HUD
       if (onAltitudeChange && time - lastAltUpdate > 0.25) {
         lastAltUpdate = time;
@@ -1211,8 +1267,6 @@ export const Mars3dSurface: React.FC<Mars3dSurfaceProps> = ({
       renderer.dispose();
       terrainGeo.dispose();
       terrainMat.dispose();
-      safetyFloorGeo.dispose();
-      safetyFloorMat.dispose();
       topoGeo.dispose();
       topoMat.dispose();
       gravelSoilTexture.dispose();
@@ -1269,6 +1323,7 @@ export const Mars3dSurface: React.FC<Mars3dSurfaceProps> = ({
       footprintMat.dispose();
       dustPuffGeo.dispose();
       dustPuffMat.dispose();
+      nameplateTextures.forEach((t) => t.dispose());
     };
   }, []);
 

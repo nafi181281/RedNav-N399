@@ -34,7 +34,9 @@ import { MapModal } from './MapModal';
 import { ScanModal } from './ScanModal';
 import { CameraModal } from './CameraModal';
 import { ToolsModal } from './ToolsModal';
+import { InformationSidePanel } from './InformationSidePanel';
 import { hudSound } from '../utils/soundEffects';
+import { Info } from 'lucide-react';
 
 export default function App() {
   // Navigation & HUD Modes (NAVIGATION is active mode by default)
@@ -76,16 +78,10 @@ export default function App() {
   const [walkDistance, setWalkDistance] = useState<number>(0);
   const [walkBob, setWalkBob] = useState<number>(0);
 
-  // Objects & Target Detection
-  // The shared object model also includes CREW, while the HUD's DetectedObject
-  // category excludes it. Keep the richer source data and narrow it at the
-  // state boundary to the categories this HUD supports.
-  const [objects, setObjects] = useState<DetectedObject[]>(() =>
-    INITIAL_DETECTED_OBJECTS.filter(
-      (obj): obj is DetectedObject => obj.category !== 'CREW',
-    ),
-  );
+  // Objects & Target Detection & Side Information Dossier
+  const [objects, setObjects] = useState<DetectedObject[]>(INITIAL_DETECTED_OBJECTS);
   const [selectedObjectId, setSelectedObjectId] = useState<string | null>(null);
+  const [isInformationOpen, setIsInformationOpen] = useState<boolean>(false);
 
   // Telemetry
   const [telemetry, setTelemetry] = useState<EnvironmentTelemetry>(INITIAL_TELEMETRY);
@@ -436,6 +432,10 @@ export default function App() {
         selectedObjectId={selectedObjectId}
         onSelectObject={(obj) => setSelectedObjectId(obj.id)}
         onSetNavigationTarget={handleSetNavigationTarget}
+        onOpenInformation={(obj) => {
+          setSelectedObjectId(obj.id);
+          setIsInformationOpen(true);
+        }}
       />
 
       {/* 5. Precision Top Visor Tape Compass (Fixed to Helmet Visor) with Live GPS Coordinates */}
@@ -495,7 +495,7 @@ export default function App() {
         viewMode={viewMode}
       />
 
-      {/* 13. Bottom Navigation Controls (MAP, SCAN, NAVIGATION, CAMERA, TOOLS, WALK PACE) */}
+      {/* 13. Bottom Navigation Controls (MAP, SCAN, NAVIGATION, CAMERA, TOOLS, INFORMATION, WALK PACE) */}
       <BottomNavControls
         activeMode={activeMode}
         onModeChange={(mode) => setActiveMode(mode)}
@@ -510,6 +510,47 @@ export default function App() {
           else if (viewMode === 'astronaut') setViewMode('drone');
           else if (viewMode === 'drone') setViewMode('satellite');
           else setViewMode('eva');
+        }}
+        isInformationOpen={isInformationOpen}
+        onToggleInformation={() => setIsInformationOpen(!isInformationOpen)}
+        informationCount={dynamicObjects.length}
+      />
+
+      {/* Quick-Access Floating Information Button on the Right Side */}
+      {!isInformationOpen && (
+        <div className="absolute left-5 bottom-32 z-30 pointer-events-auto">
+          <button
+            id="hud-floating-information-btn"
+            onClick={() => {
+              hudSound.playClick();
+              setIsInformationOpen(true);
+            }}
+            className="flex items-center space-x-2 px-3 py-2 rounded-full bg-slate-950/75 hover:bg-slate-900 backdrop-blur-xl border border-cyan-500/35 hover:border-cyan-400/70 text-white shadow-[0_4px_25px_rgba(0,0,0,0.6)] hover:shadow-[0_0_20px_rgba(6,182,212,0.35)] transition-all group active:scale-95"
+            title="Open Expedition Information Dossier"
+          >
+            <div className="w-5 h-5 rounded-full bg-cyan-500/25 flex items-center justify-center text-cyan-300 group-hover:scale-110 transition-transform">
+              <Info className="w-3 h-3" />
+            </div>
+            <span className="font-mono text-[11px] font-bold text-cyan-200 tracking-wider">
+              INFORMATION
+            </span>
+            <span className="px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold bg-cyan-400/20 text-cyan-300 border border-cyan-400/30">
+              {dynamicObjects.length}
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* 14. Expedition Information Side Panel (Holding all telemetry, crew vitals & mineral specs) */}
+      <InformationSidePanel
+        isOpen={isInformationOpen}
+        onClose={() => setIsInformationOpen(false)}
+        objects={dynamicObjects}
+        selectedObjectId={selectedObjectId}
+        onSelectObject={(obj) => setSelectedObjectId(obj.id)}
+        onSetNavigationTarget={(obj) => {
+          handleSetNavigationTarget(obj);
+          setIsInformationOpen(false);
         }}
       />
 

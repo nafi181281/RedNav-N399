@@ -19,9 +19,9 @@ export const EnvironmentTelemetryHud: React.FC<EnvironmentTelemetryHudProps> = (
   telemetry,
 }) => {
   const squad = [
-    { callsign: 'CDR Vance', dist: 'Left 9.8m', o2: '96%', status: 'lead', color: 'text-sky-300' },
-    { callsign: 'SPEC Patel', dist: 'Right 11.2m', o2: '98%', status: 'nominal', color: 'text-cyan-300' },
-    { callsign: 'DR. Chen', dist: 'Flank 19.5m', o2: '94%', status: 'scout', color: 'text-amber-300' },
+    { callsign: 'Dr. ATHER ISRAK', dist: 'Left 9.8m', o2: '96%', status: 'lead', color: 'text-sky-300' },
+    { callsign: 'Dr. POLLOB KUMAR', dist: 'Right 11.2m', o2: '98%', status: 'nominal', color: 'text-emerald-300' },
+    { callsign: 'Dr. JAMIUL ISLAM', dist: 'Flank 19.5m', o2: '94%', status: 'scout', color: 'text-amber-300' },
   ];
 
   return (
