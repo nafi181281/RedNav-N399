@@ -1,17 +1,15 @@
 import type { Metadata } from 'next';
-// The stylesheet is resolved by Next.js at build time; the local TypeScript
-// checker may not have a declaration for side-effect CSS imports.
 // @ts-ignore -- CSS is handled by the Next.js bundler.
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Mars EVA Helmet HUD',
+  title: 'RedNav-N399 | Planetary Surface Navigation & Telemetry Module',
   description:
-    'Futuristic Mars astronaut helmet visor HUD with AR navigation, terrain hazard detection, environmental telemetry, and smart object scanning.',
+    'Planetary Surface Navigation & Telemetry Module featuring 3D terrain exploration, cockpit visor HUD, and live telemetry.',
   openGraph: {
-    title: 'Mars EVA Helmet HUD',
+    title: 'RedNav-N399 | Planetary Surface Navigation & Telemetry Module',
     description:
-      'Futuristic Mars astronaut helmet visor HUD with AR navigation, terrain hazard detection, environmental telemetry, and smart object scanning.',
+      'Planetary Surface Navigation & Telemetry Module featuring 3D terrain exploration, cockpit visor HUD, and live telemetry.',
     type: 'website',
   },
   twitter: {
@@ -34,11 +32,11 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
         <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Orbitron:wght@500;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="bg-black text-slate-100 overflow-hidden select-none">
+      <body className="bg-[#060408] text-slate-100 antialiased overflow-hidden select-none">
         {children}
       </body>
     </html>
